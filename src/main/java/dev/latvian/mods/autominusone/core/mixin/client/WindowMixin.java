@@ -18,7 +18,7 @@ public class WindowMixin {
 
 	@Inject(method = "calculateScale", at = @At("HEAD"), cancellable = true)
 	private void vl$calculateScale(int maxScale, boolean enforceUnicode, CallbackInfoReturnable<Integer> cir) {
-		int s = AutoMinusOne.calculateScale(maxScale, enforceUnicode, framebufferWidth, framebufferHeight);
+		int s = AutoMinusOne.instance.calculateScale(maxScale, enforceUnicode, framebufferWidth, framebufferHeight);
 
 		if (s != -1) {
 			cir.setReturnValue(s);

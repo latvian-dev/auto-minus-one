@@ -6,18 +6,61 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
-@Mod(value = "autominusone", dist = Dist.CLIENT)
+@Mod(value = AutoMinusOne.ID, dist = Dist.CLIENT)
 public class AutoMinusOne {
+	public static final String ID = "autominusone";
+
+	public static AutoMinusOne instance;
+
+	public final AutoMinusOneConfig config;
+	private boolean uninitialized;
+	private boolean disabled;
+	private int minScale;
+	private boolean ignoreUnicode;
+	private boolean lock;
+
 	public AutoMinusOne(ModContainer container) {
-		container.registerConfig(ModConfig.Type.CLIENT, AutoMinusOneConfig.CONFIG_SPEC, "auto-minus-one-client.toml");
+		instance = this;
+
+		var configPair = new ModConfigSpec.Builder().configure(AutoMinusOneConfig::new);
+		this.config = configPair.getLeft();
+		container.registerConfig(ModConfig.Type.CLIENT, configPair.getRight(), "auto-minus-one-client.toml");
 		container.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
+
+		this.uninitialized = true;
 	}
 
-	public static int calculateScale(int maxScale, boolean enforceUnicode, int w, int h) {
-		var config = AutoMinusOneConfig.CONFIG;
+	public boolean updateConfig() {
+		var prevDisabled = disabled;
+		var prevMinScale = minScale;
+		var prevIgnoreUnicode = ignoreUnicode;
+		var prevLock = lock;
 
-		if (maxScale != 0 || config.disabled.getAsBoolean()) {
+		disabled = config.disabled.getAsBoolean();
+		minScale = config.minScale.getAsInt();
+		ignoreUnicode = config.ignoreUnicode.getAsBoolean();
+		lock = config.lock.getAsBoolean();
+
+		return prevDisabled != disabled || prevMinScale != minScale || prevIgnoreUnicode != ignoreUnicode || prevLock != lock;
+	}
+
+	public int calculateScale(int maxScale, boolean enforceUnicode, int w, int h) {
+		if (uninitialized) {
+			uninitialized = false;
+			updateConfig();
+		}
+
+		if (disabled) {
+			return -1;
+		}
+
+		if (maxScale != 0 && lock) {
+			maxScale = 0;
+		}
+
+		if (maxScale != 0) {
 			return -1;
 		}
 
@@ -27,9 +70,9 @@ public class AutoMinusOne {
 			scale++;
 		}
 
-		scale = Math.max(config.minScale.getAsInt(), scale - 1);
+		scale = Math.max(minScale, scale - 1);
 
-		if (enforceUnicode && scale % 2 != 0 && !config.ignoreUnicode.getAsBoolean()) {
+		if (enforceUnicode && scale % 2 != 0 && !ignoreUnicode) {
 			scale++;
 		}
 
