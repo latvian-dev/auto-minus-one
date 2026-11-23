@@ -1,0 +1,13 @@
+modLoader = "javafml"
+loaderVersion = "[2,)"
+license = "MIT"
+
+[[mods]]
+modId = "autominusone"
+version = "${version}"
+displayName = "Auto Minus One"
+description = "Improves scaling of the Auto GUI scale"
+authors = "latvian.dev"
+
+[[mixins]]
+config = "autominusone.client.mixins.json"
